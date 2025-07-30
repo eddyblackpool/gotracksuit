@@ -2,7 +2,7 @@ import { Trash2Icon } from "lucide-react";
 import { cx } from "../../lib/cx.ts";
 import styles from "./insights.module.css";
 import type { Insight } from "../../schemas/insight.ts";
-import { useEffect } from "react";
+import { useController } from "../../store/Controller.tsx";
 
 type InsightsProps = {
   insights: Insight[];
@@ -10,22 +10,22 @@ type InsightsProps = {
 };
 
 export const Insights = () => {
-  const { insights, className }: InsightsProps = {
-    insights: [],
-    className: "",
-  };
+
+  const { state, dispatch } = useController();
+  const insights: Insight[] = state;
+  const className = "";
+
+  console.log("insights.tsx", state);
 
   const deleteInsight = async (id: number) => {
     console.log("delete insight", id);
 
-    const deleteInsight = await fetch(`http://localhost:8080/api/insights/delete/${id}`, { method: "DELETE" }).then((res) => res.json()).then((data) => data.result);
+    await fetch(`http://localhost:8080/api/insights/delete/${id}`, { method: "DELETE" });
 
-    console.log("deleteInsight", deleteInsight);
+    dispatch({ type: "deleteInsight", payload: { id } });
+
   };
 
-  useEffect(() => {
-    console.log("insights", insights);
-  }, []);
 
   if (insights.length === 0) return <p>no insights</p>;
 
@@ -40,7 +40,7 @@ export const Insights = () => {
                 <div className={styles["insight-meta"]}>
                   <span>{brandId}</span>
                   <div className={styles["insight-meta-details"]}>
-                    <span>{date.toString()}</span>
+                    <span>{new Date(date).toLocaleString()}</span>
                     <Trash2Icon
                       className={styles["insight-delete"]}
                       onClick={() => deleteInsight(id)}

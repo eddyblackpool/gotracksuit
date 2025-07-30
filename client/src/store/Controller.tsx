@@ -1,47 +1,46 @@
-import React, { createContext, useContext, useEffect, useReducer, useState } from "react";
+import { createContext, useContext, useEffect, useReducer } from "react";
 import type { Insight } from "../schemas/insight.ts";
-
 type ControllerContextType = {
   state: any;
   dispatch: React.Dispatch<any>;
 };
 
+
+type Action =
+  | { type: "loadInsights"; payload: Insight[] }
+  | { type: "deleteInsight"; payload: { id: number } };
+
 const ControllerContext = createContext<ControllerContextType | null>(null);
 
-const currentState = {
-  insights: [
-    { brandId: 1, date: new Date(), text: "Test insight" },
-    { brandId: 2, date: new Date(), text: "Test insight" },
-    { brandId: 3, date: new Date(), text: "Test insight" },
-    { brandId: 4, date: new Date(), text: "Test insight" },
-  ],
-}
-
 export const ControllerProvider = ({ children }: { children: React.ReactNode }) => {
-  const [insights, setInsights] = useState<Insight[]>([]);
 
-  const [state, dispatch] = useReducer((state: any, action: any) => {
+  const [state, dispatch] = useReducer((state: Insight[], action: Action): Insight[] => {
+
     switch (action.type) {
-      case "insertInsight":
-        return { ...state, insights: action.payload };
+      case "loadInsights":
+        return [...state, ...action.payload];
+      case "deleteInsight": {
+        const updatedState: Insight[] = state.filter((insight: Insight) => insight.id !== action.payload.id);
+        return [...updatedState];
+      }
       default:
         return state;
     }
-  }, [currentState]);
+  }, []);
+
+
+
 
   useEffect(() => {
 
-    console.log("current state", state);
-
     const fetchInsights = async () => {
       await fetch(`http://localhost:8080/api/insights`).then((res) => res.json()).then((data => {
-        setInsights(data.result);
+        dispatch({ type: "loadInsights", payload: data.result });
       }));
     }
 
     fetchInsights();
   }, []);
-
 
   return (
     <ControllerContext.Provider value={{ state, dispatch }}>

@@ -1,4 +1,3 @@
-import type { Insight } from "$models/insight.ts";
 import type { HasDBClient } from "../shared.ts";
 
 export type Input = HasDBClient & {
@@ -10,9 +9,6 @@ export type Input = HasDBClient & {
 export default (input: Input): number | undefined => {
   console.log(`insertingnew record id=${input.id}`);
 
-  console.log(
-    `INSERT INTO insights (id, brand, text) VALUES (${input.id}, ${input.brand}, '${input.text}')`,
-  );
   const created = input.db.exec(
     "INSERT INTO insights (id, brand, text) VALUES (?, ?, ?)",
     [
