@@ -14,6 +14,6 @@ export default (input: Input): Insight[] => {
     createdAt: new Date(row.createdAt),
   }));
 
-  console.log("Retrieved insights successfully: ", result);
+  // console.log("Retrieved insights successfully: ", result);
   return result;
 };

@@ -11,7 +11,7 @@ type Fixture = HasDBClient & {
 };
 
 export const withDB = <R>(fn: (fixture: Fixture) => R): R => {
-  const db = new Database(":memory:");
+  const db = new Database("./server/tmp/db.sqlite3");
 
   beforeAll(() => {
     db.exec(insightsTable.createTable);

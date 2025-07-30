@@ -5,6 +5,16 @@ import * as path from "@std/path";
 import { Port } from "../lib/utils/index.ts";
 import listInsights from "./operations/list-insights.ts";
 import lookupInsight from "./operations/lookup-insight.ts";
+import createInsight from "./operations/create-insight.ts";
+import deleteInsight from "./operations/delete-insight.ts";
+import { customAlphabet } from "jsr:@viki/nanoid";
+import * as cors from "jsr:@tajpouria/cors";
+
+export type Input = {
+  id: number;
+  brand: number;
+  text: string;
+};
 
 console.log("Loading configuration");
 
@@ -21,7 +31,9 @@ const db = new Database(dbFilePath);
 
 console.log("Initialising server");
 
-const router = new oak.Router();
+const router = new oak.Router({
+  prefix: "/api",
+});
 
 router.get("/_health", (ctx) => {
   ctx.response.body = "OK";
@@ -30,8 +42,7 @@ router.get("/_health", (ctx) => {
 
 router.get("/insights", (ctx) => {
   const result = listInsights({ db });
-  ctx.response.body = result;
-  ctx.response.body = 200;
+  ctx.response.body = { status: 200, result };
 });
 
 router.get("/insights/:id", (ctx) => {
@@ -41,16 +52,42 @@ router.get("/insights/:id", (ctx) => {
   ctx.response.status = 200;
 });
 
-router.get("/insights/create", (ctx) => {
+router.put("/insights/create", async (ctx) => {
   // TODO
+  // create new insight record
+
+  if (!ctx.request.hasBody) {
+    ctx.throw(415);
+  }
+
+  const reqBody = await ctx.request.body.json();
+
+  const nanoid = customAlphabet("0123456789", 5);
+  const uuid = parseInt(nanoid());
+
+  const data: Input = {
+    id: uuid,
+    brand: reqBody.brand,
+    text: reqBody.text,
+  };
+
+  const result = createInsight({ db, ...data });
+  ctx.response.body = { status: 200, result };
 });
 
-router.get("/insights/delete", (ctx) => {
-  // TODO
+router.delete("/insights/delete/:id", (ctx) => {
+  const insightId = ctx.params.id;
+
+  // console.log("reqBody deleting record", insightId);
+
+  const result = deleteInsight({ db, id: parseInt(insightId) });
+
+  ctx.response.body = { status: 200, result };
 });
 
 const app = new oak.Application();
 
+app.use(cors.oakCors({ methods: ["GET", "POST", "PUT", "DELETE"] }));
 app.use(router.routes());
 app.use(router.allowedMethods());
 
